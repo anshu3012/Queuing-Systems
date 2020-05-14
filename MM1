@@ -1,0 +1,105 @@
+
+% Script/Function Name: MC MM1 Event Step Clinic
+% Version: 3
+% Date: 5/12/20
+% Author: Anshuman Singh
+% Description: A MC algorithm to calculate time-dependent waiting times 
+% and queue lengths for a single queue system.
+clc
+clear
+tic
+
+% Input Module
+MIAR = 3.6;          % Mean interarrival rate (/hr)
+MIAT = 1/MIAR;       % Mean interarrival time (in hr)
+MSR = 4;             % Mean Service Rate (/hr)
+MST = 1/MSR;         % Mean Service time (in hr)
+Nc = 100000;          % Number of customers
+Tsys = zeros(1,Nc);    % Create/initialize time in system vector 
+Tia = zeros(1,Nc);     % Create/initialize customer interarrival vector 
+Ta = zeros(1,Nc);      % Create/initialize customer arrival vector
+Tsrv = zeros(1,Nc);    % Create/initialize service time vector 
+Tnsrv = zeros(1,Nc);   % Create/initialize enter service time vector
+Txsys = zeros(1,Nc);   % Create/initialize exit service time vector 
+WTqmc = zeros(1,Nc);   % Create/initialize time in Q vector  
+MTqmc = zeros(1,Nc);   % Create/initialize Mean Time in Q vector  
+MTsys = zeros(1,Nc);   % Create/initialize Meqan Time in System vector 
+ 
+% Calculation Module
+% Generate Times
+pdat = makedist('exponential', 'mu', MIAT); % Generate random arrival times
+pdser = makedist('exponential', 'mu', MST); % Generate random service times
+% Set up using 1st customer
+Tia(1) = random(pdat);       % Generate interarrival times for cust 1
+Ta(1) = Tia(1);              % Calc arrival time for 1
+Tsys(1) = Tsrv(1);           % Calc time in system for 1
+Tnsrv(1) = Ta(1);            % Calc enter service time for 1
+Tsrv(1) = random(pdser);     % Generate service time for cust 1
+Txsys(1) = Ta(1) + Tsrv(1);  % Calc exit system time
+WTqmc(1) = 0;                % Calc queue waiting time for 1
+MTqmc(1) = WTqmc(1);         % Initialize Mean time in Queue
+ 
+% Calc times for remaining customers
+for i = 2:1:Nc
+    % Calc arrival time for customer i
+    Tia(i) = random(pdat);   
+    Ta(i) = Ta(i-1) + Tia(i);
+    Tsys(i) = Ta(i);
+    % Calc time customer enters service
+    if Ta(i) < Txsys(i-1)       %New customer arrives prior to 
+                                %last customer leaving service
+        Tnsrv(i) = Tnsrv(i-1) + Tsrv(i-1);
+    else                        %if ther is an empty queue
+        Tnsrv(i) = Ta(i);
+    end
+    Tsrv(i) = random(pdser);            % Calc service time for customer 
+    Txsys(i) = Tnsrv(i) + Tsrv(i);      % Calc time customer exits system
+    WTqmc(i) = Tnsrv(i)-Ta(i);          % Calc time in queue
+    Tsys(i) = Txsys(i) - Ta(i);         % Calc time in system
+    MTqmc(i) = ((i-1)* MTqmc(i-1) + WTqmc(i))/i;    % Update Mean Time in Queue
+    % MTsys(i) = ((i-1)* MTsys(i-1) + Tsys(i))/i;   % Update MT in System
+end
+
+% Calcuate Queue Length at differnt points in time
+Tend = Txsys(Nc);
+Nts = floor(Tend);          %plot queue length every hour
+dt = 1;
+Time = zeros(1,Nts);        %Create/initialize System time array
+Lq = zeros(1,Nts);
+Time(1) = 0;
+Lq(1) = 0;                  
+for j = 2:1:Nts
+    Time(j) = Time(j-1)+dt;
+    Lq(j) = 0;
+    % Find all customers that arrived prior to Time(j), that did not exit
+    % prior to Time j, and have not entered service.
+    for i = 1:1:Nc
+        if (Ta(i) < Time(j) && Txsys(i) > Time(j) && Tnsrv(i) > Time(j))
+            Lq(j) = Lq(j)+1;
+        end
+    end
+end
+
+% Output Module
+rhoa = MST/MIAT
+Wa = 1/(MSR-MIAR)
+MLqa = rhoa^2/(1-rhoa)
+MLqmc = mean(Lq)
+MTqa = MIAT * MLqa
+MTqmc1 = MTqmc(Nc)
+MTqmc2 = mean(WTqmc)
+SDmtamc = std(WTqmc)
+SEmtamc = SDmtamc/sqrt(Nc)
+toc
+
+%Plot Outcomes
+figure(1)
+plot(Ta,MTqmc)
+xlabel('Arrivals')
+ylabel('Mean Time in Queue')
+title('Queue Length vs Time')
+figure(2)
+plot(Time,Lq)
+xlabel('Queue Length Upon Arrival')
+ylabel('Average Queue Length')
+title('Queue Length Over Time')
