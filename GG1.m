@@ -74,6 +74,9 @@ xlabel('Arrivals')
 ylabel('Mean Time in Queue')
 title('Queue Length vs Time')
 
+
+
+% Analytical Solutions
 mean1= (2+3+5)/3;
 mean2=(1.8+2.8+4.5)/3;
 var1=(4+9+25-2*3-2*5-3*5)/18;
