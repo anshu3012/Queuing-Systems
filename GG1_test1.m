@@ -125,3 +125,42 @@ upperbound=((1/mean1)*(var1+var2))/(2*(1-rho)) % from IIT Kanpur
 wqwiki=(rho/(1-rho))*((ca2+cs2)/2)*mean2 %from wiki
 
 
+
+%%
+clc; clear; close all;
+
+
+
+% Queuing theory provides the following theoretical results for an M/M/1
+% queue with an arrival rate of L (lambda) and a service rate of M (mu).
+%
+% MEAN WAITING TIME IN THE QUEUE
+% 
+%   1 / (M - L) - (1/M)
+% 
+% 
+% UTILIZATION OF THE SERVER
+% 
+%   L / M
+% 
+
+L = 3.5;    % MEAN ARRIVE RATE IS 3.5 MIN
+
+M = 3.7;    % MEAN SERVICE RATE IS 3.7 MIN
+
+
+QUEUE_WAIT_TIME = 1 / (M - L) - (1/M)
+
+
+OCCUPIED_SERVER_PCT = L / M * 100
+
+
+
+
+
+
+
+
+
+
+
